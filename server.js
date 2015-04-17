@@ -2,6 +2,7 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs      = require('fs');
+var Q       = require('q');
 
 
 /**
@@ -98,6 +99,17 @@ var SampleApp = function() {
         self.routes['/asciimo'] = function(req, res) {
             var link = "http://i.imgur.com/kmbjB.png";
             res.send("<html><body><img src='" + link + "'></body></html>");
+        };
+
+        self.routes['/whatevz'] = function(req, res) {
+            var promise = Q.fcall(function() {
+                return 'hello'
+            });
+
+            promise.then(function(data) {
+                res.send("<html><body><p>" + data + "</p></body></html>");
+            })
+
         };
 
         self.routes['/'] = function(req, res) {
