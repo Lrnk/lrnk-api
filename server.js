@@ -5,6 +5,7 @@ var fs = require('fs');
 var cheerio = require("cheerio");
 var request = require("request")
 var Q = require("q");
+var moment = require("moment");
 
 
 var LrnkApiApp = function () {
@@ -104,6 +105,7 @@ var LrnkApiApp = function () {
         self.routes['/ukchart.csv'] = function (req, res) {
 
             res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename="' + moment().format('YYYY-MM-DD_HHmm') + '_chart.csv"');
             getChartHtml().then(
                 function success(chartHtml) {
                     res.end(getCsvString(getChartData(chartHtml)));
