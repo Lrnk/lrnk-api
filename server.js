@@ -102,7 +102,7 @@ var LrnkApiApp = function () {
     self.createRoutes = function () {
         self.routes = {};
 
-        self.routes['/ukchart.csv'] = function (req, res) {
+        self.routes['/ukchart'] = function (req, res) {
 
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', 'attachment; filename="' + moment().format('YYYY-MM-DD_HHmm') + '_chart.csv"');
