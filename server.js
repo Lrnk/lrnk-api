@@ -109,7 +109,7 @@ var LrnkApiApp = function () {
                     res.end(getCsvString(getChartData(chartHtml)));
                 },
                 function fail(e) {
-                    process.stderror.write('Failed to get ukchart data: ' + e + '\n');
+                    process.stderr.write('Failed to get ukchart data: ' + e + '\n');
                 }
             );
 
@@ -118,6 +118,7 @@ var LrnkApiApp = function () {
                 var chartHtmlDeferred = Q.defer();
                 Q.fcall(function () {
                     request('http://www.officialcharts.com/singles-chart/', function (error, response, html) {
+
                         if (!error && response.statusCode == 200) {
                             chartHtmlDeferred.resolve(html);
                         } else {
@@ -126,15 +127,38 @@ var LrnkApiApp = function () {
                     });
                 });
 
+
                 return chartHtmlDeferred.promise;
             }
 
             function getChartData(chartHtml) {
+
+
+
+                var chartData = [];
+
                 $ = cheerio.load(chartHtml);
-                return [['hey', 'there','hey', 'there','what'],
-                    ['check', 'out','hey', 'there','what'],
-                    ['this', 'cool','hey', 'there','what'],
-                    ['csv', 'file','hey', 'there','what']];
+
+                $('tr').each(function(i, entryTr) {
+
+                    var $entryTr = $(entryTr);
+
+                    if($entryTr.find(".position").length) {
+
+                        var entry = [];
+
+                        entry.push($entryTr.find(".position").text().trim());
+                        entry.push($entryTr.find(".last-week").text().trim());
+                        entry.push($($entryTr.find("td").get(4)).text().trim());
+
+                        entry.push($entryTr.find(".artist").text().trim());
+                        entry.push($entryTr.find(".title").text().trim());
+
+                        chartData.push(entry);
+                    }
+                });
+
+                return chartData;
             }
 
             function getCsvString(chartData) {
