@@ -2,7 +2,9 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs = require('fs');
-var csv = require('csv');
+var cheerio = require("cheerio");
+var request = require("request")
+var Q = require("q");
 
 
 var LrnkApiApp = function () {
@@ -100,26 +102,57 @@ var LrnkApiApp = function () {
         self.routes = {};
 
         self.routes['/ukchart.csv'] = function (req, res) {
+
             res.setHeader('Content-Type', 'text/csv');
+            getChartHtml().then(
+                function success(chartHtml) {
+                    res.end(getCsvString(getChartData(chartHtml)));
+                },
+                function fail(e) {
+                    process.stderror.write('Failed to get ukchart data: ' + e + '\n');
+                }
+            );
 
-            // todo get the chart data for the CSV in a 2d array
-            var data = [
-                ['hey', 'there'],
-                ['check', 'out'],
-                ['this', 'cool'],
-                ['csv', 'file']
-            ];
 
-            csv.transform(data,
-                function options(data) {
-                    return data.map(function (value) {
-                        return value.toUpperCase()
-                    });
-                }, function callback(err, data) {
-                    csv.stringify(data, function (err, data) {
-                        res.end(data);
+            function getChartHtml() {
+                var chartHtmlDeferred = Q.defer();
+                Q.fcall(function () {
+                    request('http://www.officialcharts.com/singles-chart/', function (error, response, html) {
+                        if (!error && response.statusCode == 200) {
+                            chartHtmlDeferred.resolve(html);
+                        } else {
+                            chartHtmlDeferred.reject(response.statusCode);
+                        }
                     });
                 });
+
+                return chartHtmlDeferred.promise;
+            }
+
+            function getChartData(chartHtml) {
+                $ = cheerio.load(chartHtml);
+                return [['hey', 'there','hey', 'there','what'],
+                    ['check', 'out','hey', 'there','what'],
+                    ['this', 'cool','hey', 'there','what'],
+                    ['csv', 'file','hey', 'there','what']];
+            }
+
+            function getCsvString(chartData) {
+
+                var csvString = 'position,last week,weeks,artist,title\n';
+
+                chartData.forEach(function (row) {
+                    row.forEach(function(cell) {
+                        csvString = csvString.concat(cell + ',');
+                    });
+                    csvString = csvString
+                        .slice(0,-1)
+                        .concat('\n');
+                });
+
+                return csvString;
+            }
+
         };
 
         self.routes['/'] = function (req, res) {
