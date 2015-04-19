@@ -2,7 +2,7 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs      = require('fs');
-var Q       = require('q');
+var csv = require('csv');
 
 
 /**
@@ -96,20 +96,27 @@ var SampleApp = function() {
     self.createRoutes = function() {
         self.routes = { };
 
-        self.routes['/asciimo'] = function(req, res) {
-            var link = "http://i.imgur.com/kmbjB.png";
-            res.send("<html><body><img src='" + link + "'></body></html>");
-        };
+        self.routes['/ukchart.csv'] = function (req, res) {
+            res.setHeader('Content-Type', 'text/csv');
 
-        self.routes['/whatevz'] = function(req, res) {
-            var promise = Q.fcall(function() {
-                return 'hello'
-            });
+            // todo get the chart data for the CSV in a 2d array
+            var data = [
+                ['hey', 'there'],
+                ['check', 'out'],
+                ['this', 'cool'],
+                ['csv', 'file']
+            ];
 
-            promise.then(function(data) {
-                res.send("<html><body><p>" + data + "</p></body></html>");
-            })
-
+            csv.transform(data,
+                function options(data) {
+                    return data.map(function (value) {
+                        return value.toUpperCase()
+                    });
+                }, function callback(err, data) {
+                    csv.stringify(data, function (err, data) {
+                        res.end(data);
+                    });
+                });
         };
 
         self.routes['/'] = function(req, res) {
@@ -131,6 +138,9 @@ var SampleApp = function() {
         for (var r in self.routes) {
             self.app.get(r, self.routes[r]);
         }
+
+        //serve static files
+        self.app.use(express.static('public'));
     };
 
 
