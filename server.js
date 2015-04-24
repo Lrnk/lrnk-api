@@ -111,17 +111,17 @@ var LrnkApiApp = function () {
             res.send(self.cache_get('ukchart.html'));
         };
 
-        self.routes['/ukchart/data'] = function (req, res) {
 
-            res.setHeader('Content-Type', 'application/json');
+        self.routes['/ukchart/csv'] = function (req, res) {
 
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename="' + (req.query.date ? req.query.date + '_' : '') + 'chart.csv"');
             getChartHtml().then(
                 function success(chartHtml) {
-                    res.json(getChartData(chartHtml));
+                    res.end(getCsvString(getChartData(chartHtml)));
                 },
                 function fail(e) {
                     process.stderr.write('Failed to get ukchart data: ' + e + '\n');
-                    res.status(500).send('Couldn\'t get the chart data');
                 }
             );
 
@@ -171,6 +171,22 @@ var LrnkApiApp = function () {
                 });
 
                 return chartData;
+            }
+
+            function getCsvString(chartData) {
+
+                var csvString = 'position,last week,weeks,artist,title\n';
+
+                chartData.forEach(function (row) {
+                    row.forEach(function(cell) {
+                        csvString = csvString.concat(cell + ',');
+                    });
+                    csvString = csvString
+                        .slice(0,-1)
+                        .concat('\n');
+                });
+
+                return csvString;
             }
 
         };

@@ -221,42 +221,7 @@ line-height: 1.4;
   <script>
 
     window.downloadCsv = function() {
-
-      $.ajax('/ukchart/data', {
-        success: function(data) {
-          var csvContent = 'data:text/csv;charset=utf-8,' + getCsvString(data);
-          var encodedUri = encodeURI(csvContent);
-          var link = document.createElement("a");
-          link.setAttribute("href", encodedUri);
-          link.setAttribute("download", moment().format('YYYY-MM-DD_HHmm') + '_chart.csv');
-
-          link.click();
-
-          $('.error-message').text('');
-
-        },
-        error: function(xhr) {
-          $('.error-message').text('Error: ' + xhr.status);
-        }
-      });
-
-
-      function getCsvString(chartData) {
-
-        var csvString = 'position,last week,weeks,artist,title\n';
-
-        chartData.forEach(function (row) {
-          row.forEach(function(cell) {
-            csvString = csvString.concat(cell + ',');
-          });
-          csvString = csvString
-                  .slice(0,-1)
-                  .concat('\n');
-        });
-
-        return csvString;
-      }
-
+      window.location.href = '/ukchart/csv?date=' + moment().format('YYYY-MM-DD_HHmm');
     };
 
     $( document ).ready(function() {
