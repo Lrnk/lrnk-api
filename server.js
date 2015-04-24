@@ -40,11 +40,15 @@ var LrnkApiApp = function () {
      */
     self.populateCache = function () {
         if (typeof self.zcache === "undefined") {
-            self.zcache = {'index.html': ''};
+            self.zcache = {
+                'index.html': '',
+                'ukchart.html': ''
+            };
         }
 
         //  Local cache for static content.
         self.zcache['index.html'] = fs.readFileSync('./index.html');
+        self.zcache['ukchart.html'] = fs.readFileSync('./ukchart.html');
     };
 
 
@@ -102,16 +106,22 @@ var LrnkApiApp = function () {
     self.createRoutes = function () {
         self.routes = {};
 
-        self.routes['/ukchart'] = function (req, res) {
+        self.routes['/ukchart'] = function(req, res) {
+            res.setHeader('Content-Type', 'text/html');
+            res.send(self.cache_get('ukchart.html'));
+        };
 
-            res.setHeader('Content-Type', 'text/csv');
-            res.setHeader('Content-Disposition', 'attachment; filename="' + moment().format('YYYY-MM-DD_HHmm') + '_chart.csv"');
+        self.routes['/ukchart/data'] = function (req, res) {
+
+            res.setHeader('Content-Type', 'application/json');
+
             getChartHtml().then(
                 function success(chartHtml) {
-                    res.end(getCsvString(getChartData(chartHtml)));
+                    res.json(getChartData(chartHtml));
                 },
                 function fail(e) {
                     process.stderr.write('Failed to get ukchart data: ' + e + '\n');
+                    res.status(500).send('Couldn\'t get the chart data');
                 }
             );
 
@@ -161,22 +171,6 @@ var LrnkApiApp = function () {
                 });
 
                 return chartData;
-            }
-
-            function getCsvString(chartData) {
-
-                var csvString = 'position,last week,weeks,artist,title\n';
-
-                chartData.forEach(function (row) {
-                    row.forEach(function(cell) {
-                        csvString = csvString.concat(cell + ',');
-                    });
-                    csvString = csvString
-                        .slice(0,-1)
-                        .concat('\n');
-                });
-
-                return csvString;
             }
 
         };
