@@ -212,6 +212,8 @@ line-height: 1.4;
     </hgroup>
 
     <p>File should download automatically. If not, click below:</p><input type="button" value="Download" onclick="downloadCsv()"/>
+    <br/>
+    <p class="error-message" style="color: red"></p>
 
   <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
   <script src="http://momentjs.com/downloads/moment.js"></script>
@@ -230,6 +232,11 @@ line-height: 1.4;
 
           link.click();
 
+          $('.error-message').text('');
+
+        },
+        error: function(xhr) {
+          $('.error-message').text('Error: ' + xhr.status);
         }
       });
 
@@ -252,7 +259,9 @@ line-height: 1.4;
 
     };
 
-    downloadCsv();
+    $( document ).ready(function() {
+      downloadCsv();
+    });
 
 
   </script>
