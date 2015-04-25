@@ -27,7 +27,8 @@
     "express": "~3.4.4",
     "moment": "^2.10.2",
     "q": "^1.2.0",
-    "request": "^2.55.0"
+    "request": "^2.55.0",
+    "xml2js": "^0.4.8"
   },
   "devDependencies": {},
   "bundleDependencies": [],

@@ -2,10 +2,10 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs = require('fs');
-var cheerio = require("cheerio");
-var request = require("request")
-var Q = require("q");
-var moment = require("moment");
+var cheerio = require('cheerio');
+var request = require('request');
+var Q = require('q');
+var xml2js = require('xml2js');
 
 
 var LrnkApiApp = function () {
@@ -106,11 +106,10 @@ var LrnkApiApp = function () {
     self.createRoutes = function () {
         self.routes = {};
 
-        self.routes['/ukchart'] = function(req, res) {
+        self.routes['/ukchart'] = function (req, res) {
             res.setHeader('Content-Type', 'text/html');
             res.send(self.cache_get('ukchart.html'));
         };
-
 
         self.routes['/ukchart/csv'] = function (req, res) {
 
@@ -146,16 +145,15 @@ var LrnkApiApp = function () {
             function getChartData(chartHtml) {
 
 
-
                 var chartData = [];
 
                 $ = cheerio.load(chartHtml);
 
-                $('tr').each(function(i, entryTr) {
+                $('tr').each(function (i, entryTr) {
 
                     var $entryTr = $(entryTr);
 
-                    if($entryTr.find(".position").length) {
+                    if ($entryTr.find(".position").length) {
 
                         var entry = [];
 
@@ -178,17 +176,66 @@ var LrnkApiApp = function () {
                 var csvString = 'position,last week,weeks,artist,title\n';
 
                 chartData.forEach(function (row) {
-                    row.forEach(function(cell) {
+                    row.forEach(function (cell) {
                         csvString = csvString.concat(cell + ',');
                     });
                     csvString = csvString
-                        .slice(0,-1)
+                        .slice(0, -1)
                         .concat('\n');
                 });
 
                 return csvString;
             }
 
+        };
+
+        self.routes['/books'] = function (req, res) {
+
+            res.setHeader('Content-Type', 'application/json');
+
+            getBooksXml().then(
+                function success(xmlData) {
+                    getBooksJson(xmlData).then(
+                        function (jsonData) {
+                            res.end(JSON.stringify(jsonData));
+                        }
+                    );
+                },
+                function fail(e) {
+                    process.stderr.write('Failed to get books data: ' + e + '\n');
+                });
+
+
+            function getBooksJson(xml) {
+                var deferred = Q.defer();
+
+                Q.fcall(function () {
+                    xml2js.parseString(xml, function (err, result) {
+                        deferred.resolve(result);
+                    });
+                });
+
+                return deferred.promise;
+
+            }
+
+            function getBooksXml() {
+                var booksDeferred = Q.defer();
+
+                Q.fcall(function () {
+                    request(
+                        'https://www.goodreads.com/review/list.xml?v=2&id=4442921&key=HGxl0L4D846xCoMfL7RoJQ',
+                        function (error, response, stuff) {
+                            if (!error && response.statusCode == 200) {
+                                booksDeferred.resolve(stuff);
+                            } else {
+                                booksDeferred.reject(response.statusCode);
+                            }
+                        });
+                });
+
+                return booksDeferred.promise;
+            }
         };
 
         self.routes['/'] = function (req, res) {
